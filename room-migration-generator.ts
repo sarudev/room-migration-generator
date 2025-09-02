@@ -366,10 +366,10 @@ class RoomMigrationGenerator {
     const { from, to } = this.getSchemasVersions(migration)
     const className = `MIGRATION_${from}_${to}`
 
-    let kotlinCode = `private val ${className} = object : Migration(${from}, ${to}) {
-  override fun migrate(database: SupportSQLiteDatabase) {`
+    let kotlinCode = `val ${className} = object : Migration(${from}, ${to}) {
+  override fun migrate(db: SupportSQLiteDatabase) {`
 
-    for (const sql of migration.sqlStatements) if (!sql.startsWith('--')) kotlinCode += `\n    database.execSQL("${sql.replace(/"/g, '\\"')}")`
+    for (const sql of migration.sqlStatements) if (!sql.startsWith('--')) kotlinCode += `\n    db.execSQL("${sql.replace(/"/g, '\\"')}")`
 
     kotlinCode += `
   }
@@ -499,7 +499,7 @@ ${result}
       .toSchema.database.entities.map((m) => m.tableName)
       .map((e) => this.replaceUnderscore(e))
 
-    const filename = path.join(outputDir, '../AppDatabase.kt')
+    const filename = path.join(outputDir, 'AppDatabase.kt')
 
     const config = `package com.sarudev.calories.database
 
