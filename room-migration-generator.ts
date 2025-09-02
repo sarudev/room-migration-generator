@@ -7,8 +7,8 @@
  * npx ts-node room-migration-generator.ts --dir schemas/com.tuapp.database.AppDatabase
  */
 
-import fs from 'fs'
-import path from 'path'
+import * as fs from 'fs'
+import * as path from 'path'
 import { program } from 'commander'
 
 interface RoomField {
@@ -505,7 +505,7 @@ ${result}
 
 import android.content.Context
 import androidx.room.*
-${entityNames.map((e) => `import com.sarudev.calories.database.${e}.*\n`).join('')}
+${entityNames.map((e) => `import com.sarudev.calories.database.tables.${e}.*\n`).join('')}
 @Database(
   version = ${version},
   exportSchema = true,
