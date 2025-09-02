@@ -391,7 +391,7 @@ class RoomMigrationGenerator {
   /**
    * Genera todas las migraciones en un directorio
    */
-  generateAllMigrations(schemasDir: string): void {
+  generateAllMigrations(schemasDir: string, outDir: string): void {
     const schemas = this.findSchemas(schemasDir)
 
     if (schemas.length < 2) {
@@ -401,7 +401,7 @@ class RoomMigrationGenerator {
 
     console.log(`📁 Encontrados ${schemas.length} schemas: ${schemas.map((s) => `v${s.version}`).join(', ')}`)
 
-    const outputDir = path.join(process.cwd(), 'generated-migrations')
+    const outputDir = path.join(process.cwd(), outDir)
     if (!fs.existsSync(outputDir)) fs.mkdirSync(outputDir, { recursive: true })
 
     let migrations = `package com.sarudev.calories.database\n\nimport androidx.room.*\nimport androidx.room.migration.*\nimport androidx.sqlite.db.*\n\n`
@@ -438,9 +438,9 @@ class RoomMigrationGenerator {
       }
     }
 
-    const filenameSummary = path.join(outputDir, 'changelog.md')
+    const filenameSummary = path.join(outputDir, 'migrations/changelog.md')
     fs.writeFileSync(filenameSummary, summary)
-    const filenameAutos = path.join(outputDir, 'migrations.kt')
+    const filenameAutos = path.join(outputDir, 'migrations/migrations.kt')
     fs.writeFileSync(filenameAutos, migrations)
     console.log()
     this.generateDatabaseConfig(schemas.reverse()[0].version, migrationsData, outputDir)
@@ -499,7 +499,7 @@ ${result}
       .toSchema.database.entities.map((m) => m.tableName)
       .map((e) => this.replaceUnderscore(e))
 
-    const filename = path.join(outputDir, 'AppDatabase.kt')
+    const filename = path.join(outputDir, '../AppDatabase.kt')
 
     const config = `package com.sarudev.calories.database
 
@@ -547,22 +547,24 @@ abstract class AppDatabase : RoomDatabase() {
 // CLI Setup
 program.name('room-migration-generator').description('Genera migraciones de Room comparando schemas JSON').version('1.0.0')
 
-program.option('-d, --dir <path>', 'Directorio con múltiples schemas').action((options) => {
-  const generator = new RoomMigrationGenerator()
+program
+  .option('-d, --dir <path>', 'Directorio con múltiples schemas')
+  .option('-o, --out <path>', 'Directorio de salida (por defecto: directorio actual)')
+  .action((options) => {
+    const generator = new RoomMigrationGenerator()
 
-  try {
-    if (options.dir) {
-      // Múltiples migraciones
-      generator.generateAllMigrations(options.dir)
-    } else {
-      console.error('❌ Especifica --dir')
+    try {
+      if (options.dir && options.out) {
+        generator.generateAllMigrations(options.dir, options.out)
+      } else {
+        console.error('❌ Especifica --dir y --out')
+        process.exit(1)
+      }
+    } catch (error) {
+      console.error('❌ Error:', error)
       process.exit(1)
     }
-  } catch (error) {
-    console.error('❌ Error:', error)
-    process.exit(1)
-  }
-})
+  })
 
 program.parse()
 
