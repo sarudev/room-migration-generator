@@ -170,6 +170,8 @@ class RoomMigrationGenerator {
     // Crear mapas por nombre de tabla
     const oldTables = new Map(oldEntities.map((e) => [e.tableName, e]))
     const newTables = new Map(newEntities.map((e) => [e.tableName, e]))
+    console.log(oldEntities[1].fields)
+    console.log(newEntities[1].fields)
 
     // Tablas nuevas
     for (const [tableName, entity] of newTables) {
@@ -404,7 +406,7 @@ class RoomMigrationGenerator {
     const outputDir = path.join(process.cwd(), outDir)
     if (!fs.existsSync(outputDir)) fs.mkdirSync(outputDir, { recursive: true })
 
-    let migrations = `package com.sarudev.calories.database\n\nimport androidx.room.*\nimport androidx.room.migration.*\nimport androidx.sqlite.db.*\n\n`
+    let migrations = `package com.sarudev.calories.database.migrations\n\nimport androidx.room.*\nimport androidx.room.migration.*\nimport androidx.sqlite.db.*\n\n`
     let summary = ''
     let migrationsData: Migration[] = []
 
@@ -505,6 +507,7 @@ ${result}
 
 import android.content.Context
 import androidx.room.*
+import com.sarudev.calories.database.migrations.*
 ${entityNames.map((e) => `import com.sarudev.calories.database.tables.${e}.*\n`).join('')}
 @Database(
   version = ${version},
@@ -531,8 +534,7 @@ abstract class AppDatabase : RoomDatabase() {
           AppDatabase::class.java,
           "app_db"
         )
-          ${manualMigrationsData.map((e) => `.addMigrations(MIGRATION_${e.from}_${e.to})`)}
-          .fallbackToDestructiveMigration(true)
+          ${manualMigrationsData.map((e) => `.addMigrations(MIGRATION_${e.from}_${e.to})`).join('\n          ')}
           .build()
           .also { INSTANCE = it }
       }
